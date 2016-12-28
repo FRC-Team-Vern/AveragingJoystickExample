@@ -2,20 +2,14 @@ package org.usfirst.frc.team5461.robot;
 
 import java.io.IOException;
 import java.util.ArrayDeque;
-import java.util.logging.ConsoleHandler;
-import java.util.logging.FileHandler;
-import java.util.logging.Handler;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.logging.SimpleFormatter;
+import org.slf4j.Logger;
+import org.usfirst.frc.team5461.robot.EventLogging.Level;
 
 import edu.wpi.first.wpilibj.Joystick;
 
 public class AveragingJoystick extends Joystick {
 	
-	static private FileHandler fileTxt;
-    static private SimpleFormatter formatterTxt;
-	private static final Logger logger = Logger.getLogger(AveragingJoystick.class.getName());
+    static Logger logger = EventLogging.getLogger(AveragingJoystick.class, Level.INFO);
 	
 	private static final int AVERAGE_SIZE = 10;
 	private ArrayDeque<Double> mLeftJoyStack = new ArrayDeque<>();
@@ -23,30 +17,7 @@ public class AveragingJoystick extends Joystick {
 
 	public AveragingJoystick(int port) {
 		super(port);
-		try {
-			setupLogger();
-		} catch (IOException e) {
-            e.printStackTrace();
-            throw new RuntimeException("Problems with creating the log files");
-		}
 		initializeLeftRightStacks();
-	}
-	
-	private void setupLogger() throws IOException {
-		// suppress the logging output to the console
-        Logger rootLogger = Logger.getLogger("");
-        Handler[] handlers = rootLogger.getHandlers();
-        if (handlers[0] instanceof ConsoleHandler) {
-                rootLogger.removeHandler(handlers[0]);
-        }
-
-        logger.setLevel(Level.INFO);
-        fileTxt = new FileHandler("/home/lvuser/AveragingJoystick.txt");
-
-        // create a TXT formatter
-        formatterTxt = new SimpleFormatter();
-        fileTxt.setFormatter(formatterTxt);
-        logger.addHandler(fileTxt);
 	}
 	
 	private void initializeLeftRightStacks() {

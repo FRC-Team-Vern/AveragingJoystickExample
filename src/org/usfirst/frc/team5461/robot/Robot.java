@@ -1,6 +1,11 @@
 
 package org.usfirst.frc.team5461.robot;
 
+import java.io.File;
+import java.util.TimeZone;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usfirst.frc.team5461.robot.subsystems.ExerciseAveragingJoystick;
 
 import edu.wpi.first.wpilibj.IterativeRobot;
@@ -22,13 +27,42 @@ public class Robot extends IterativeRobot {
 
     Command autonomousCommand;
 //    SendableChooser chooser;
-
+    
+    static Logger logger = LoggerFactory.getLogger(Robot.class);
+    DataLogger dataLogger;
     /**
      * This function is run when the robot is first started up and should be
      * used for any initialization code.
      */
     public void robotInit() {
 		oi = new OI();
+		
+		// Set dataLogger and Time information
+		TimeZone.setDefault(TimeZone.getTimeZone("America/Denver"));
+		
+		File logDirectory = null;
+		if (logDirectory == null) logDirectory = findLogDirectory(new File("/u"));
+		if (logDirectory == null) logDirectory = findLogDirectory(new File("/v"));
+		if (logDirectory == null) logDirectory = findLogDirectory(new File("/x"));
+		if (logDirectory == null) logDirectory = findLogDirectory(new File("/y"));
+		if (logDirectory == null) {
+			logDirectory = new File("/home/lvuser/logs");
+		    if (!logDirectory.exists())
+		    {
+			    logDirectory.mkdir();
+		    }
+		}
+		if (logDirectory != null && logDirectory.isDirectory())
+		{
+			String logMessage = String.format("Log directory is %s\n", logDirectory);
+			System.out.print (logMessage);
+			EventLogging.writeToDS(logMessage);
+			EventLogging.setup(logDirectory);
+			dataLogger = new DataLogger(logDirectory);
+			dataLogger.setMinimumInterval(1000);
+		}
+
+		logger.info ("Starting robotInit");
     }
 	
 	/**
@@ -79,4 +113,14 @@ public class Robot extends IterativeRobot {
     public void testPeriodic() {
         LiveWindow.run();
     }
+    
+    public File findLogDirectory (File root) {
+		// does the root directory exist?
+		if (!root.isDirectory()) return null;
+		
+		File logDirectory = new File(root, "logs");
+		if (!logDirectory.isDirectory()) return null;
+		
+		return logDirectory;
+	}
 }
