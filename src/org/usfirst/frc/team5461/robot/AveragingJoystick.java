@@ -11,7 +11,7 @@ public class AveragingJoystick extends Joystick {
 	
     static Logger logger = EventLogging.getLogger(AveragingJoystick.class, Level.INFO);
 	
-	private static final int AVERAGE_SIZE = 10;
+	private static final int AVERAGE_SIZE = 100;
 	private ArrayDeque<Double> mLeftJoyStack = new ArrayDeque<>();
 	private ArrayDeque<Double> mRightJoyStack = new ArrayDeque<>();
 

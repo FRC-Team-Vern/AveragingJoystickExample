@@ -12,8 +12,11 @@ import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import java.util.logging.StreamHandler;
 
-import edu.wpi.first.wpilibj.communication.FRCNetworkCommunicationsLibrary;
-import edu.wpi.first.wpilibj.communication.HALControlWord;
+import edu.wpi.first.wpilibj.hal.ControlWord;
+import edu.wpi.first.wpilibj.hal.HAL;
+
+//import edu.wpi.first.wpilibj.communication.FRCNetworkCommunicationsLibrary;
+//import edu.wpi.first.wpilibj.communication.HALControlWord;
 
 public class EventLogging {
 	
@@ -73,11 +76,10 @@ public class EventLogging {
 	 */
 	public static final void writeToDS(String message)
 	{
-		final HALControlWord controlWord = FRCNetworkCommunicationsLibrary
-				.HALGetControlWord();
+		final ControlWord controlWord = new ControlWord();
 		if (controlWord.getDSAttached())
 		{
-			FRCNetworkCommunicationsLibrary.HALSetErrorData(message);
+			HAL.setErrorData(message);
 		}
 	}
 
@@ -228,11 +230,11 @@ public class EventLogging {
 			// DateFormat objects are not thread-safe....
 			synchronized (df) 
 			{
-				builder.append(df.format(new Date(record.getMillis()))).append(" ");
+				builder.append(df.format(new Date(record.getMillis()))).append(",");
 			}
 			builder.append("[").append(record.getLoggerName())
 					.append("] ");
-			builder.append(record.getLevel()).append(" - ");
+			builder.append(record.getLevel()).append(",");
 			builder.append(formatMessage(record));
 			builder.append("\n");
 			return builder.toString();
