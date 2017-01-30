@@ -2,15 +2,20 @@ package org.usfirst.frc.team5461.robot;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Handler;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import java.util.logging.StreamHandler;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import edu.wpi.first.wpilibj.hal.ControlWord;
 import edu.wpi.first.wpilibj.hal.HAL;
@@ -166,6 +171,7 @@ public class EventLogging {
 	static class MyFileHandler extends StreamHandler {
 		File logDirectory;
 		FileOutputStream fileOutputStream = null;
+		private static final int MAX_NUM_LOG_FILES = 5;
 
 		public MyFileHandler(File logDirectory) {
 			super();
@@ -190,9 +196,8 @@ public class EventLogging {
 						
 						if (timestampString != null)
 						{
-							// cool, let's make a file to log to!
-							File logFile = new File(logDirectory,
-									timestampString + ".log");
+							// Let's keep the number of log files we have small to protect memory.
+							File logFile = generateNextLogFile(timestampString);
 							try
 							{
 								fileOutputStream = new FileOutputStream(logFile);
@@ -214,7 +219,55 @@ public class EventLogging {
 				flush();
 			}
 		}
+		
+		private File generateNextLogFile(String timestampString) {
+			// Find all existing log files to determine if any need to be deleted
+			FilenameFilter fnf = new FilenameFilter() {
 
+				@Override
+				public boolean accept(File dir, String name) {
+					// Get last index for '.' char
+					int lastIndex = name.lastIndexOf('.');
+					if (lastIndex > 0) {
+						// Get extension
+						String str = name.substring(lastIndex);
+						
+						if (str.equals(".log")) {
+							return true;
+						}
+					}
+					return false;
+				}
+			};
+			
+			File[] currentLogDirectoryFiles = logDirectory.listFiles(fnf);
+			
+			// Find oldest log file.
+			Map<String, File> logFilesMap = new HashMap<>();
+			Pattern logPattern = Pattern.compile("^(\\d+-\\d+).log$");
+			for (File file : currentLogDirectoryFiles) {
+				String filename = file.getName();
+				Matcher m = logPattern.matcher(filename);
+				if (m.find()) {
+					logFilesMap.put(m.group(1), file);
+				} else {
+					System.out.println("Could not match pattern: " + filename);
+				}
+			}
+			
+			// If number of log files is greater than the max index then determine the oldest and delete
+			if (logFilesMap.size() >= MAX_NUM_LOG_FILES) {
+				String oldestTimeStamp = logFilesMap.entrySet().stream()
+						.min((kv1, kv2) -> kv1.getKey().compareTo(kv2.getKey())).get().getKey();
+				boolean deleteLogFile = logFilesMap.get(oldestTimeStamp).delete();
+				if (deleteLogFile) {
+					System.out.println("Deleted log file: " + oldestTimeStamp + ".log");
+				}
+			}
+			
+			
+			return new File(logDirectory, timestampString + ".log");
+		}
 	}
 
 	static class FormatterForFileHandler extends java.util.logging.Formatter {

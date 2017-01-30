@@ -18,7 +18,7 @@ public class LogTimestamp {
 						SimpleDateFormat formatName = new SimpleDateFormat(
 								"yyyyMMdd-HHmmss");
 						_timestampString = formatName.format(new Date());
-						String logMessage = String.format("timestamp for logs is %s\n", _timestampString);
+						String logMessage = String.format("timestamp for log file is %s\n", _timestampString);
 						EventLogging.writeToDS(logMessage);
 						System.out.print (logMessage);
 					}
